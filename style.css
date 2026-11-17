@@ -3,6 +3,7 @@ body {
   background: #f5f5f5;
   margin: 0;
   padding: 20px;
+  color: #333; /* Базовый черный цвет текста */
 }
 .container {
   max-width: 600px;
@@ -12,11 +13,16 @@ body {
   border-radius: 15px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   text-align: center;
+  color: #000; /* Принудительно черный текст внутри контейнера */
+}
+h2 {
+  color: #000;
 }
 .word {
   font-size: 32px;
   margin: 30px 0;
   letter-spacing: 2px;
+  color: #000;
 }
 .vowel {
   cursor: pointer;
@@ -48,7 +54,7 @@ body {
   padding: 15px 25px;
   border: 2px solid #ddd;
   border-radius: 10px;
-  background: slategray;
+  background: gray;
   cursor: pointer;
   transition: all 0.2s;
 }

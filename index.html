@@ -8,12 +8,19 @@
 </head>
 <body>
 <div class="container">
-  <div id="task-screen">
+  
+  <div id="topic-screen">
+    <h2>Выберите тему:</h2>
+    <div class="topics" id="topicsList"></div>
+  </div>
+
+  
+  <div id="task-screen" class="hidden">
     <h2 id="questionText"></h2>
     <div id="content"></div>
     <button id="checkBtn" onclick="checkAnswer()" disabled>Проверить</button>
   </div>
-
+  
   <div id="result-screen" class="hidden">
     <div id="resultMessage"></div>
     <button onclick="nextTask()">Дальше</button>
