@@ -13,7 +13,7 @@ const database = {
       { type: "choice", question: "Творительный падеж:", content: "девяносто", options: ["девяноста", "девяностами"], correct: "девяностами" },
       
       { type: "choice", question: "Родительный падеж:", content: "сто", options: ["ста", "стов"], correct: "ста" },
-      { type: "choice", question: "Дательный падеж:", content: "сто", options: ["сту", "стам"], correct: "сту" },
+      { type: "choice", question: "Дательный падеж:", content: "сто", options: ["сту", "ста"], correct: "ста" },
       { type: "choice", question: "Предложный падеж:", content: "сто", options: ["о ста", "о стое"], correct: "о ста" },
 
       
