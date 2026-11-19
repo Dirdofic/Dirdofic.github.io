@@ -92,11 +92,9 @@ const database = {
 };
 
 let currentTopic = null;
-let currentTasks = [];
-let currentIndex = 0;
+let taskQueue = []; // Очередь заданий (перемешанная копия)
 let selectedOption = null;
 let selectedVowelIndex = null;
-
 
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -125,9 +123,8 @@ function initTopics() {
 
 function selectTopic(topicKey) {
   currentTopic = topicKey;
-  
-  currentTasks = shuffleArray([...database[topicKey].tasks]);
-  currentIndex = 0;
+  // Создаем перемешанную очередь из всех заданий темы
+  taskQueue = shuffleArray([...database[topicKey].tasks]);
   
   document.getElementById('topic-screen').classList.add('hidden');
   document.getElementById('task-screen').classList.remove('hidden');
@@ -135,12 +132,14 @@ function selectTopic(topicKey) {
 }
 
 function loadTask() {
-  if (currentIndex >= currentTasks.length) {
+  // Если очередь пуста - тема пройдена!
+  if (taskQueue.length === 0) {
+    alert("🎉 Тема пройдена! Все задания решены верно.");
     initTopics();
     return;
   }
   
-  const task = currentTasks[currentIndex];
+  const task = taskQueue[0]; // Берем первое задание из очереди
   document.getElementById('questionText').textContent = task.question;
   
   const contentDiv = document.getElementById('content');
@@ -221,7 +220,7 @@ function selectVowel(span, index) {
 }
 
 function checkAnswer() {
-  const task = currentTasks[currentIndex];
+  const task = taskQueue[0]; // Проверяем текущее первое задание
   let isCorrect = false;
   
   if (task.type === 'choice' || task.type === 'input') {
@@ -248,15 +247,22 @@ function checkAnswer() {
       : `✗ Ошибка! Правильный ответ: ${task.correct}`;
   }
   
+  // ГЛАВНАЯ ЛОГИКА: УДАЛЕНИЕ ИЛИ ПЕРЕМЕЩЕНИЕ
+  if (isCorrect) {
+    taskQueue.shift(); // Удаляем из очереди, если верно
+  } else {
+    const failedTask = taskQueue.shift(); // Забираем из начала
+    taskQueue.push(failedTask); // Кладем в самый конец
+  }
+  
   document.getElementById('task-screen').classList.add('hidden');
   document.getElementById('result-screen').classList.remove('hidden');
 }
 
 function nextTask() {
-  currentIndex++;
   document.getElementById('result-screen').classList.add('hidden');
   document.getElementById('task-screen').classList.remove('hidden');
-  loadTask();
+  loadTask(); // Загружает следующее (или то же, если была ошибка)
 }
 
 initTopics();
