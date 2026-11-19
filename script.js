@@ -90,10 +90,13 @@ const database = {
   
 };
 
+
 let currentTopic = null;
-let taskQueue = []; // Очередь заданий (перемешанная копия)
+let taskQueue = [];
 let selectedOption = null;
 let selectedVowelIndex = null;
+let streak = 0; // Текущая серия правильных ответов
+let bestStreak = 0; // Лучший рекорд для текущей темы
 
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -103,6 +106,17 @@ function shuffleArray(array) {
   return array;
 }
 
+// Загрузка рекорда из памяти браузера
+function loadBestStreak(topicKey) {
+  const saved = localStorage.getItem(`best_streak_${topicKey}`);
+  return saved ? parseInt(saved, 10) : 0;
+}
+
+// Сохранение рекорда
+function saveBestStreak(topicKey, value) {
+  localStorage.setItem(`best_streak_${topicKey}`, value.toString());
+}
+
 function initTopics() {
   const topicsDiv = document.getElementById('topicsList');
   topicsDiv.innerHTML = '';
@@ -110,7 +124,9 @@ function initTopics() {
   for (const key in database) {
     const btn = document.createElement('button');
     btn.className = 'topic-btn';
-    btn.textContent = database[key].name;
+    const record = loadBestStreak(key);
+    // Показываем рекорд прямо на кнопке темы
+    btn.textContent = `${database[key].name} ${record > 0 ? `(🔥${record})` : ''}`;
     btn.onclick = () => selectTopic(key);
     topicsDiv.appendChild(btn);
   }
@@ -122,8 +138,9 @@ function initTopics() {
 
 function selectTopic(topicKey) {
   currentTopic = topicKey;
-  // Создаем перемешанную очередь из всех заданий темы
   taskQueue = shuffleArray([...database[topicKey].tasks]);
+  streak = 0;
+  bestStreak = loadBestStreak(topicKey);
   
   document.getElementById('topic-screen').classList.add('hidden');
   document.getElementById('task-screen').classList.remove('hidden');
@@ -131,15 +148,20 @@ function selectTopic(topicKey) {
 }
 
 function loadTask() {
-  // Если очередь пуста - тема пройдена!
   if (taskQueue.length === 0) {
-    alert("🎉 Тема пройдена! Все задания решены верно.");
+    alert(`🎉 Тема пройдена! Твой лучший страйк: ${bestStreak}`);
     initTopics();
     return;
   }
   
-  const task = taskQueue[0]; // Берем первое задание из очереди
+  const task = taskQueue[0];
   document.getElementById('questionText').textContent = task.question;
+  
+  // Обновляем отображение страйка над заданием
+  const streakDisplay = document.getElementById('streak-display');
+  if (streakDisplay) {
+    streakDisplay.textContent = `Текущий страйк: ${streak} | Рекорд темы: ${bestStreak}`;
+  }
   
   const contentDiv = document.getElementById('content');
   contentDiv.innerHTML = '';
@@ -219,7 +241,7 @@ function selectVowel(span, index) {
 }
 
 function checkAnswer() {
-  const task = taskQueue[0]; // Проверяем текущее первое задание
+  const task = taskQueue[0];
   let isCorrect = false;
   
   if (task.type === 'choice' || task.type === 'input') {
@@ -234,24 +256,19 @@ function checkAnswer() {
   const resultDiv = document.getElementById('resultMessage');
   resultDiv.className = isCorrect ? 'correct' : 'incorrect';
   
-  if (task.type === 'stress') {
-    const correctWord = task.content.split('');
-    correctWord[task.correct] = correctWord[task.correct].toUpperCase();
-    resultDiv.innerHTML = isCorrect 
-      ? '✓ Правильно!' 
-      : `✗ Ошибка! Правильно: ${correctWord.join('')}`;
-  } else {
-    resultDiv.innerHTML = isCorrect 
-      ? '✓ Правильно!' 
-      : `✗ Ошибка! Правильный ответ: ${task.correct}`;
-  }
-  
-  // ГЛАВНАЯ ЛОГИКА: УДАЛЕНИЕ ИЛИ ПЕРЕМЕЩЕНИЕ
   if (isCorrect) {
-    taskQueue.shift(); // Удаляем из очереди, если верно
+    streak++;
+    if (streak > bestStreak) {
+      bestStreak = streak;
+      saveBestStreak(currentTopic, bestStreak);
+    }
+    taskQueue.shift();
+    resultDiv.innerHTML = `✓ Правильно! Страйк: ${streak} 🔥`;
   } else {
-    const failedTask = taskQueue.shift(); // Забираем из начала
-    taskQueue.push(failedTask); // Кладем в самый конец
+    streak = 0; // Сброс серии при ошибке
+    const failedTask = taskQueue.shift();
+    taskQueue.push(failedTask);
+    resultDiv.innerHTML = `✗ Ошибка! Страйк сброшен. Правильный ответ: ${task.type === 'stress' ? task.content.split('').map((c, i) => i === task.correct ? c.toUpperCase() : c).join('') : task.correct}`;
   }
   
   document.getElementById('task-screen').classList.add('hidden');
@@ -261,7 +278,7 @@ function checkAnswer() {
 function nextTask() {
   document.getElementById('result-screen').classList.add('hidden');
   document.getElementById('task-screen').classList.remove('hidden');
-  loadTask(); // Загружает следующее (или то же, если была ошибка)
+  loadTask();
 }
 
 initTopics();
